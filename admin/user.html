@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User & Learner Management | LingoAdmin</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between hidden md:flex">
+            <div>
+                <div class="h-16 flex items-center px-6 bg-slate-950 font-bold text-xl text-indigo-400">
+                    <i class="fa-solid fa-language mr-3 text-2xl"></i> LingoAdmin
+                </div>
+                <nav class="mt-6 px-4 space-y-1">
+                    <a href="{{ url_for('admin.dashboard') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-chart-line w-6"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('admin.courses') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-book-open w-6"></i> Courses & Lessons
+                    </a>
+                    <a href="{{ url_for('admin.languages') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-earth-americas w-6"></i> Languages
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium">
+                        <i class="fa-solid fa-users w-6"></i> Learners & Admins
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-spell-check w-6"></i> Vocab Banks
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white">
+                        {{ current_user.username[0]|upper if current_user and current_user.username else 'A' }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-white">{{ current_user.username if current_user and current_user.username else 'Admin' }}</p>
+                        <p class="text-xs text-slate-400">Super Admin</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Container -->
+        <div class="flex-1 flex flex-col overflow-y-auto">
+            
+            <!-- Top Navbar -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('admin.dashboard') }}" class="text-slate-400 hover:text-slate-600 transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-800">
+                        {% if user and user.id %}Edit User Account: {{ user.username }}{% else %}User Accounts & Learners{% endif %}
+                    </h1>
+                </div>
+                <button type="submit" form="userForm" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center cursor-pointer">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> Save User Profile
+                </button>
+            </header>
+
+            <!-- Main Body Content -->
+            <main class="p-6 space-y-6 max-w-5xl mx-auto w-full">
+                
+                <!-- Account Form -->
+                <form id="userForm" action="{{ url_for('admin.save_user', user_id=user.id) if user and user.id else url_for('admin.create_user') }}" method="POST" class="space-y-6">
+                    
+                    <!-- Basic User Credentials Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <h2 class="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">Account Information</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                                <input type="text" name="username" value="{{ user.username if user else '' }}" placeholder="e.g., johndoe" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                                <input type="email" name="email" value="{{ user.email if user else '' }}" placeholder="e.g., john@example.com" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                                <select name="role" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option value="learner" {% if not user or user.role == 'learner' %}selected{% endif %}>Learner (Student)</option>
+                                    <option value="instructor" {% if user and user.role == 'instructor' %}selected{% endif %}>Instructor</option>
+                                    <option value="admin" {% if user and user.role == 'admin' %}selected{% endif %}>Super Admin</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">
+                                    Password {% if user %}<span class="text-xs font-normal text-slate-400">(Leave blank to keep unchanged)</span>{% endif %}
+                                </label>
+                                <input type="password" name="password" placeholder="••••••••" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" {% if not user %}required{% endif %} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Learning & System Preferences Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <h2 class="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">Learning Profile & Settings</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Target Language</label>
+                                <select name="target_language_id" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option value="" disabled {% if not user or not user.target_language_id %}selected{% endif %}>Select Primary Language</option>
+                                    {% if languages %}
+                                        {% for lang in languages %}
+                                            <option value="{{ lang.id }}" {% if user and user.target_language_id == lang.id %}selected{% endif %}>{{ lang.name }} ({{ lang.code }})</option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Account Status</label>
+                                <select name="status" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option value="active" {% if not user or user.status == 'active' %}selected{% endif %}>Active</option>
+                                    <option value="suspended" {% if user and user.status == 'suspended' %}selected{% endif %}>Suspended</option>
+                                    <option value="pending" {% if user and user.status == 'pending' %}selected{% endif %}>Pending Verification</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-3 pt-2">
+                            <input type="checkbox" id="email_notifications" name="email_notifications" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" {% if not user or user.email_notifications %}checked{% endif %} />
+                            <label for="email_notifications" class="text-sm font-medium text-slate-700">Receive Daily Streak & Review Reminders</label>
+                        </div>
+                    </div>
+
+                </form>
+
+                <!-- Registered Users List Directory -->
+                {% if users %}
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden space-y-0">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-800">Learners Directory</h2>
+                            <p class="text-xs text-slate-500">Manage all registered accounts across the platform.</p>
+                        </div>
+                        <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{{ users|length }} total accounts</span>
+                    </div>
+
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                                <th class="px-6 py-3">User</th>
+                                <th class="px-6 py-3">Role</th>
+                                <th class="px-6 py-3">Target Lang</th>
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            {% for u in users %}
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold text-xs">
+                                            {{ u.username[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-slate-800">{{ u.username }}</p>
+                                            <p class="text-xs text-slate-400">{{ u.email }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 capitalize text-slate-600">
+                                    {% if u.role == 'admin' %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">Admin</span>
+                                    {% elif u.role == 'instructor' %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Instructor</span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">Learner</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-slate-600">
+                                    {{ u.target_language.name if u.target_language else 'Not Selected' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if u.status == 'active' or not u.status %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Active</span>
+                                    {% elif u.status == 'suspended' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Suspended</span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-right space-x-2">
+                                    <a href="{{ url_for('admin.edit_user', user_id=u.id) }}" class="text-indigo-600 hover:text-indigo-900 font-medium">Edit</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+            </main>
+        </div>
+    </div>
+
+</body>
+</html>

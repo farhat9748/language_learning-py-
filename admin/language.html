@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Management | LingoAdmin</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between hidden md:flex">
+            <div>
+                <div class="h-16 flex items-center px-6 bg-slate-950 font-bold text-xl text-indigo-400">
+                    <i class="fa-solid fa-language mr-3 text-2xl"></i> LingoAdmin
+                </div>
+                <nav class="mt-6 px-4 space-y-1">
+                    <a href="{{ url_for('admin.dashboard') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-chart-line w-6"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('admin.courses') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-book-open w-6"></i> Courses & Lessons
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium">
+                        <i class="fa-solid fa-earth-americas w-6"></i> Languages
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-users w-6"></i> Learners
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-spell-check w-6"></i> Vocab Banks
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white">
+                        {{ current_user.username[0]|upper if current_user and current_user.username else 'A' }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-white">{{ current_user.username if current_user and current_user.username else 'Admin' }}</p>
+                        <p class="text-xs text-slate-400">Super Admin</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Container -->
+        <div class="flex-1 flex flex-col overflow-y-auto">
+            
+            <!-- Top Navbar -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('admin.dashboard') }}" class="text-slate-400 hover:text-slate-600 transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-800">
+                        {% if language and language.id %}Edit Language: {{ language.name }}{% else %}Add New Language{% endif %}
+                    </h1>
+                </div>
+                <button type="submit" form="languageForm" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center cursor-pointer">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> Save Language
+                </button>
+            </header>
+
+            <!-- Main Body Form -->
+            <main class="p-6 space-y-6 max-w-5xl mx-auto w-full">
+                
+                <form id="languageForm" action="{{ url_for('admin.save_language', language_id=language.id) if language and language.id else url_for('admin.create_language') }}" method="POST" class="space-y-6">
+                    
+                    <!-- Basic Language Info Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <h2 class="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">Language Configuration</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Language Name</label>
+                                <input type="text" name="name" value="{{ language.name if language else '' }}" placeholder="e.g., Spanish, Japanese" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Language Code (ISO 639-1)</label>
+                                <input type="text" name="code" value="{{ language.code if language else '' }}" placeholder="e.g., es, ja, fr" maxlength="5" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Flag Icon / Emoji</label>
+                                <input type="text" name="flag_emoji" value="{{ language.flag_emoji if language else '' }}" placeholder="e.g., 🇪🇸, 🇯🇵" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Native Name</label>
+                                <input type="text" name="native_name" value="{{ language.native_name if language else '' }}" placeholder="e.g., Español, 日本語" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Text Direction</label>
+                                <select name="direction" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option value="ltr" {% if not language or language.direction == 'ltr' %}selected{% endif %}>Left to Right (LTR)</option>
+                                    <option value="rtl" {% if language and language.direction == 'rtl' %}selected{% endif %}>Right to Left (RTL)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visibility & Settings Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <h2 class="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">Status & Settings</h2>
+                        
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" id="is_active" name="is_active" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" {% if not language or language.is_active %}checked{% endif %} />
+                            <label for="is_active" class="text-sm font-medium text-slate-700">Active (Visible to learners)</label>
+                        </div>
+                    </div>
+
+                </form>
+
+                <!-- Existing Languages Table (If listing languages in the same view) -->
+                {% if languages %}
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100">
+                        <h2 class="text-base font-bold text-slate-800">Existing Languages</h2>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                                <th class="px-6 py-3">Language</th>
+                                <th class="px-6 py-3">Code</th>
+                                <th class="px-6 py-3">Native Name</th>
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            {% for lang in languages %}
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-800">
+                                    <span class="mr-2">{{ lang.flag_emoji }}</span> {{ lang.name }}
+                                </td>
+                                <td class="px-6 py-4 text-slate-500"><code>{{ lang.code }}</code></td>
+                                <td class="px-6 py-4 text-slate-600">{{ lang.native_name or '-' }}</td>
+                                <td class="px-6 py-4">
+                                    {% if lang.is_active %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Active</span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-right space-x-2">
+                                    <a href="{{ url_for('admin.edit_language', language_id=lang.id) }}" class="text-indigo-600 hover:text-indigo-900 font-medium">Edit</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+            </main>
+        </div>
+    </div>
+
+</body>
+</html>

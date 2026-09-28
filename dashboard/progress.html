@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard | LingoLearner</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased flex h-screen overflow-hidden">
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden transition-opacity"></div>
+
+    <!-- Learner Sidebar -->
+    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-300 flex flex-col justify-between transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out">
+        <div>
+            <!-- Sidebar Header / Logo -->
+            <div class="h-16 flex items-center justify-between px-6 bg-slate-950 font-bold text-xl text-indigo-400">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-graduation-cap mr-3 text-2xl"></i> LingoLearner
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <!-- Sidebar Navigation Menu -->
+            <nav class="mt-6 px-4 space-y-1">
+                <a href="{{ url_for('dashboard.index') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-house w-6"></i> Dashboard
+                </a>
+                <a href="{{ url_for('dashboard.courses') if 'dashboard.courses' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-book-open w-6"></i> My Courses
+                </a>
+                <a href="{{ url_for('dashboard.vocab') if 'dashboard.vocab' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-spell-check w-6"></i> Vocab Deck
+                </a>
+                <a href="{{ url_for('dashboard.leaderboard') }}" class="flex items-center px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium shadow-sm">
+                    <i class="fa-solid fa-trophy w-6"></i> Leaderboard
+                </a>
+                <a href="{{ url_for('dashboard.settings') if 'dashboard.settings' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-gear w-6"></i> Settings
+                </a>
+            </nav>
+        </div>
+        
+        <!-- User Profile Quick View Footer -->
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white shadow-sm">
+                    {{ current_user.username[0]|upper if current_user and current_user.username else 'L' }}
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-semibold text-white truncate">{{ current_user.username if current_user and current_user.username else 'Learner' }}</p>
+                    <p class="text-xs text-slate-400">Streak: {{ current_user.streak|default(5) }} Days 🔥</p>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" title="Sign Out" class="text-slate-400 hover:text-white transition p-1">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col overflow-y-auto w-full">
+        
+        <!-- Top Navbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-slate-900 p-1">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h1 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center">
+                    <i class="fa-solid fa-trophy text-amber-500 mr-2.5"></i> Global Leaderboard
+                </h1>
+            </div>
+
+            <!-- League / Timer Stats -->
+            <div class="flex items-center space-x-3">
+                <div class="hidden sm:flex items-center bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold border border-indigo-200">
+                    <i class="fa-solid fa-shield-halved mr-1.5 text-indigo-500"></i> Diamond League
+                </div>
+                <div class="flex items-center bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-semibold border border-slate-200">
+                    <i class="fa-regular fa-clock mr-1.5 text-slate-400"></i> Resets in {{ days_remaining|default(3) }}d {{ hours_remaining|default(14) }}h
+                </div>
+            </div>
+        </header>
+
+        <!-- Leaderboard Main Body -->
+        <main class="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto w-full">
+            
+            <!-- Filter & League Header Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <!-- Time Range Tabs -->
+                <div class="flex bg-slate-100 p-1 rounded-lg self-start sm:self-auto text-xs font-semibold">
+                    <a href="?timeframe=weekly" class="px-4 py-1.5 rounded-md {% if timeframe != 'monthly' and timeframe != 'alltime' %}bg-white text-indigo-600 shadow-sm{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+                        Weekly
+                    </a>
+                    <a href="?timeframe=monthly" class="px-4 py-1.5 rounded-md {% if timeframe == 'monthly' %}bg-white text-indigo-600 shadow-sm{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+                        Monthly
+                    </a>
+                    <a href="?timeframe=alltime" class="px-4 py-1.5 rounded-md {% if timeframe == 'alltime' %}bg-white text-indigo-600 shadow-sm{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+                        All-Time
+                    </a>
+                </div>
+
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-64">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="leaderboardSearch" onkeyup="filterLeaderboard()" placeholder="Find learner..." class="w-full pl-9 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+            </div>
+
+            <!-- Top 3 Podium Cards -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-4 text-center items-end pt-4">
+                
+                <!-- 2nd Place -->
+                <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-end relative pt-7">
+                    <div class="absolute -top-3.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-300 text-slate-800 flex items-center justify-center font-bold text-xs sm:text-sm shadow">2</div>
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-base sm:text-lg mb-2 ring-2 ring-slate-300">
+                        {{ leaderboard[1].username[0]|upper if leaderboard and leaderboard|length > 1 else 'S' }}
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-xs sm:text-sm truncate w-full">
+                        {{ leaderboard[1].username if leaderboard and leaderboard|length > 1 else 'SarahJenkins' }}
+                    </h4>
+                    <p class="text-[11px] sm:text-xs font-semibold text-indigo-600 mt-0.5">
+                        {{ leaderboard[1].xp|default(1850) }} XP
+                    </p>
+                </div>
+
+                <!-- 1st Place (Winner Podium) -->
+                <div class="bg-gradient-to-b from-amber-50 to-white p-5 sm:p-6 rounded-xl border-2 border-amber-300 shadow-md flex flex-col items-center justify-end relative pt-8 -mt-4">
+                    <div class="absolute -top-4 sm:-top-5 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-amber-400 text-white flex items-center justify-center font-bold text-sm sm:text-base shadow-lg">
+                        <i class="fa-solid fa-crown text-amber-100"></i>
+                    </div>
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-lg sm:text-xl mb-2 shadow ring-4 ring-amber-200">
+                        {{ leaderboard[0].username[0]|upper if leaderboard and leaderboard|length > 0 else 'M' }}
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-xs sm:text-base truncate w-full">
+                        {{ leaderboard[0].username if leaderboard and leaderboard|length > 0 else 'Marco_Polo' }}
+                    </h4>
+                    <p class="text-xs sm:text-sm font-bold text-amber-600 mt-0.5">
+                        {{ leaderboard[0].xp|default(2120) }} XP
+                    </p>
+                </div>
+
+                <!-- 3rd Place -->
+                <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-end relative pt-7">
+                    <div class="absolute -top-3.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-700/20 text-amber-800 flex items-center justify-center font-bold text-xs sm:text-sm shadow">3</div>
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-base sm:text-lg mb-2 ring-2 ring-amber-300/50">
+                        {{ leaderboard[2].username[0]|upper if leaderboard and leaderboard|length > 2 else 'D' }}
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-xs sm:text-sm truncate w-full">
+                        {{ leaderboard[2].username if leaderboard and leaderboard|length > 2 else 'Daiki_S' }}
+                    </h4>
+                    <p class="text-[11px] sm:text-xs font-semibold text-indigo-600 mt-0.5">
+                        {{ leaderboard[2].xp|default(1640) }} XP
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Full Standings Directory Table -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">League Standings</h3>
+                        <p class="text-xs text-slate-400">Top 3 advance to the Champion Division next week</p>
+                    </div>
+                    <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+                        {{ leaderboard|length if leaderboard else 4 }} Active Competitors
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="leaderboardTable">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                                <th class="px-6 py-3 w-16 text-center">Rank</th>
+                                <th class="px-6 py-3">Learner</th>
+                                <th class="px-6 py-3">Streak</th>
+                                <th class="px-6 py-3 text-right">XP Earned</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            {% if leaderboard %}
+                                {% for user in leaderboard %}
+                                <tr class="hover:bg-slate-50 transition {% if current_user and user.id == current_user.id %}bg-indigo-50/70 border-l-4 border-l-indigo-600{% endif %}">
+                                    <td class="px-6 py-4 text-center font-bold text-slate-600">
+                                        {% if loop.index == 1 %}<span class="text-amber-500 font-extrabold text-base">1</span>
+                                        {% elif loop.index == 2 %}<span class="text-slate-400 font-extrabold text-base">2</span>
+                                        {% elif loop.index == 3 %}<span class="text-amber-700 font-extrabold text-base">3</span>
+                                        {% else %}{{ loop.index }}{% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 font-medium text-slate-800">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                                                {{ user.username[0]|upper }}
+                                            </div>
+                                            <div class="truncate">
+                                                <span class="font-semibold text-slate-800">{{ user.username }}</span>
+                                                {% if current_user and user.id == current_user.id %}
+                                                    <span class="inline-block text-[10px] font-bold bg-indigo-600 text-white px-2 py-0.5 rounded ml-1.5 uppercase">You</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-600 whitespace-nowrap">
+                                        <span class="inline-flex items-center font-medium">
+                                            <i class="fa-solid fa-fire text-amber-500 mr-1.5"></i> {{ user.streak|default(0) }} days
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-bold text-indigo-600 whitespace-nowrap">
+                                        {{ user.xp }} XP
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <!-- Mock Rows for Development / Preview -->
+                                <tr class="hover:bg-slate-50"><td class="px-6 py-4 text-center font-bold text-amber-500 text-base">1</td><td class="px-6 py-4 font-semibold text-slate-800"><div class="flex items-center space-x-3"><div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">M</div><span>Marco_Polo</span></div></td><td class="px-6 py-4 text-slate-600 font-medium"><i class="fa-solid fa-fire text-amber-500 mr-1.5"></i> 14 days</td><td class="px-6 py-4 text-right font-bold text-indigo-600">2,120 XP</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="px-6 py-4 text-center font-bold text-slate-400 text-base">2</td><td class="px-6 py-4 font-semibold text-slate-800"><div class="flex items-center space-x-3"><div class="w-8 h-8 rounded-full bg-slate-600 text-white flex items-center justify-center text-xs font-bold">S</div><span>SarahJenkins</span></div></td><td class="px-6 py-4 text-slate-600 font-medium"><i class="fa-solid fa-fire text-amber-500 mr-1.5"></i> 9 days</td><td class="px-6 py-4 text-right font-bold text-indigo-600">1,850 XP</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="px-6 py-4 text-center font-bold text-amber-700 text-base">3</td><td class="px-6 py-4 font-semibold text-slate-800"><div class="flex items-center space-x-3"><div class="w-8 h-8 rounded-full bg-amber-800 text-white flex items-center justify-center text-xs font-bold">D</div><span>Daiki_S</span></div></td><td class="px-6 py-4 text-slate-600 font-medium"><i class="fa-solid fa-fire text-amber-500 mr-1.5"></i> 6 days</td><td class="px-6 py-4 text-right font-bold text-indigo-600">1,640 XP</td></tr>
+                                <tr class="hover:bg-slate-50 bg-indigo-50/70 border-l-4 border-l-indigo-600"><td class="px-6 py-4 text-center font-bold text-slate-600">4</td><td class="px-6 py-4 font-semibold text-slate-800"><div class="flex items-center space-x-3"><div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">L</div><div><span>Learner</span> <span class="inline-block text-[10px] font-bold bg-indigo-600 text-white px-2 py-0.5 rounded ml-1.5 uppercase">You</span></div></div></td><td class="px-6 py-4 text-slate-600 font-medium"><i class="fa-solid fa-fire text-amber-500 mr-1.5"></i> 5 days</td><td class="px-6 py-4 text-right font-bold text-indigo-600">1,250 XP</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Interface Scripts -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            sidebar.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
+        }
+
+        function filterLeaderboard() {
+            const input = document.getElementById('leaderboardSearch');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('leaderboardTable');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td')[1];
+                if (td) {
+                    const txtValue = td.textContent || td.innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        tr[i].style.display = '';
+                    } else {
+                        tr[i].style.display = 'none';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

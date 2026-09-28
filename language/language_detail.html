@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ language.name|default('Spanish') }} Course Details | LingoLearner</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased flex h-screen overflow-hidden">
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden transition-opacity"></div>
+
+    <!-- Learner Sidebar -->
+    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-300 flex flex-col justify-between transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out">
+        <div>
+            <!-- Sidebar Header / Logo -->
+            <div class="h-16 flex items-center justify-between px-6 bg-slate-950 font-bold text-xl text-indigo-400">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-graduation-cap mr-3 text-2xl"></i> LingoLearner
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <!-- Sidebar Navigation Menu -->
+            <nav class="mt-6 px-4 space-y-1">
+                <a href="{{ url_for('dashboard.index') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-house w-6"></i> Dashboard
+                </a>
+                <a href="{{ url_for('dashboard.courses') if 'dashboard.courses' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-book-open w-6"></i> My Courses
+                </a>
+                <a href="{{ url_for('language.index') if 'language.index' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium shadow-sm">
+                    <i class="fa-solid fa-globe w-6"></i> Languages
+                </a>
+                <a href="{{ url_for('dashboard.vocab') if 'dashboard.vocab' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-spell-check w-6"></i> Vocab Deck
+                </a>
+                <a href="{{ url_for('dashboard.leaderboard') if 'dashboard.leaderboard' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-trophy w-6"></i> Leaderboard
+                </a>
+                <a href="{{ url_for('dashboard.settings') if 'dashboard.settings' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-gear w-6"></i> Settings
+                </a>
+            </nav>
+        </div>
+        
+        <!-- User Profile Quick View Footer -->
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white shadow-sm">
+                    {{ current_user.username[0]|upper if current_user and current_user.username else 'L' }}
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-semibold text-white truncate">{{ current_user.username if current_user and current_user.username else 'Learner' }}</p>
+                    <p class="text-xs text-slate-400">Streak: {{ current_user.streak|default(5) }} Days 🔥</p>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" title="Sign Out" class="text-slate-400 hover:text-white transition p-1">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col overflow-y-auto w-full">
+        
+        <!-- Top Navbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-slate-900 p-1">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <a href="{{ url_for('language.index') if 'language.index' in url_for.__self__ else '#' }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i> All Languages
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+                    {{ language.region|default('Global / Europe') }}
+                </span>
+            </div>
+        </header>
+
+        <!-- Course Detail Body -->
+        <main class="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto w-full">
+
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div class="flex items-start space-x-5">
+                    <span class="text-6xl sm:text-7xl leading-none select-none">{{ language.flag|default('🇪🇸') }}</span>
+                    <div class="space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-semibold bg-indigo-500/30 border border-indigo-400/30 px-3 py-0.5 rounded-full uppercase tracking-wider text-indigo-200">
+                                {{ language.level|default('Beginner to Advanced (A1 - C1)') }}
+                            </span>
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                            {{ language.name|default('Spanish') }} Masterclass
+                        </h1>
+                        <p class="text-slate-300 text-xs sm:text-sm max-w-xl">
+                            {{ language.description|default('Master natural conversation, core grammar syntax, listening comprehension, and essential vocabulary through interactive bite-sized lessons.') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-auto flex flex-col space-y-2 shrink-0">
+                    {% if current_user and current_user.target_language_id == language.id %}
+                        <a href="{{ url_for('dashboard.index') }}" class="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl text-xs sm:text-sm transition text-center shadow-md flex items-center justify-center">
+                            <i class="fa-solid fa-play mr-2"></i> Continue Learning
+                        </a>
+                    {% else %}
+                        <form action="{{ url_for('language.enroll', language_id=language.id) if 'language.enroll' in url_for.__self__ else '#' }}" method="POST">
+                            <button type="submit" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl text-xs sm:text-sm transition text-center shadow-md flex items-center justify-center">
+                                <i class="fa-solid fa-plus-circle mr-2"></i> Enroll in Course
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Key Metrics Bar -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">Active Learners</p>
+                        <p class="text-sm sm:text-base font-bold text-slate-800">{{ language.learners_count|default('2.4M') }}</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">Total Lessons</p>
+                        <p class="text-sm sm:text-base font-bold text-slate-800">{{ language.total_lessons|default(64) }} Modules</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">Vocab Cards</p>
+                        <p class="text-sm sm:text-base font-bold text-slate-800">{{ language.vocab_count|default(1200) }}+</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-certificate"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">Certification</p>
+                        <p class="text-sm sm:text-base font-bold text-slate-800">Included</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Content Breakdown Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Syllabus / Units Directory -->
+                <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="font-bold text-slate-800 text-base">Course Curriculum</h3>
+                        <span class="text-xs text-slate-400">Structured Path</span>
+                    </div>
+
+                    <div class="divide-y divide-slate-100">
+                        {% if curriculum_units %}
+                            {% for unit in curriculum_units %}
+                            <div class="p-5 hover:bg-slate-50 transition space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-sm text-slate-800 flex items-center">
+                                        <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold mr-2.5">{{ loop.index }}</span>
+                                        {{ unit.title }}
+                                    </h4>
+                                    <span class="text-[11px] font-semibold text-slate-400">{{ unit.lessons_count }} Lessons</span>
+                                </div>
+                                <p class="text-xs text-slate-500 pl-8">{{ unit.description }}</p>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Mock Units -->
+                            <div class="p-5 hover:bg-slate-50 transition space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-sm text-slate-800 flex items-center">
+                                        <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold mr-2.5">1</span>
+                                        Foundations & Greetings
+                                    </h4>
+                                    <span class="text-[11px] font-semibold text-slate-400">8 Lessons</span>
+                                </div>
+                                <p class="text-xs text-slate-500 pl-8.5">Basic salutations, introducing yourself, gendered nouns, and fundamental present tense verbs.</p>
+                            </div>
+
+                            <div class="p-5 hover:bg-slate-50 transition space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-sm text-slate-800 flex items-center">
+                                        <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold mr-2.5">2</span>
+                                        Travel, Food & Dining
+                                    </h4>
+                                    <span class="text-[11px] font-semibold text-slate-400">12 Lessons</span>
+                                </div>
+                                <p class="text-xs text-slate-500 pl-8.5">Navigating transit, ordering dishes at bistro tables, asking for directions, and payment etiquette.</p>
+                            </div>
+
+                            <div class="p-5 hover:bg-slate-50 transition space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-sm text-slate-800 flex items-center">
+                                        <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold mr-2.5">3</span>
+                                        Past Tenses & Storytelling
+                                    </h4>
+                                    <span class="text-[11px] font-semibold text-slate-400">14 Lessons</span>
+                                </div>
+                                <p class="text-xs text-slate-500 pl-8.5">Mastering preterite vs. imperfect tenses, narrating past events, and expressive adjectives.</p>
+                            </div>
+
+                            <div class="p-5 hover:bg-slate-50 transition space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-sm text-slate-800 flex items-center">
+                                        <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold mr-2.5">4</span>
+                                        Advanced Grammar & Subjunctive
+                                    </h4>
+                                    <span class="text-[11px] font-semibold text-slate-400">16 Lessons</span>
+                                </div>
+                                <p class="text-xs text-slate-500 pl-8.5">Expressing doubts, wishes, conditional scenarios, and fluent conversational nuance.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Learning Outcomes Sidebar -->
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+                        <h3 class="font-bold text-slate-800 text-base border-b border-slate-100 pb-3">What You Will Learn</h3>
+                        
+                        <ul class="space-y-3 text-xs text-slate-600">
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-circle-check text-emerald-500 text-sm mr-2.5 mt-0.5"></i>
+                                <span>Hold confident real-world conversations with native speakers.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-circle-check text-emerald-500 text-sm mr-2.5 mt-0.5"></i>
+                                <span>Master over 1,000+ high-frequency vocabulary words and idioms.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-circle-check text-emerald-500 text-sm mr-2.5 mt-0.5"></i>
+                                <span>Understand spoken audio at natural speed with native accent exercises.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-circle-check text-emerald-500 text-sm mr-2.5 mt-0.5"></i>
+                                <span>Gain certified proficiency compliant with CEFR standard levels.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Community Practice Card -->
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 space-y-3">
+                        <div class="flex items-center space-x-2 text-indigo-800 font-bold text-sm">
+                            <i class="fa-solid fa-comments text-indigo-600"></i>
+                            <span>Active Learner Community</span>
+                        </div>
+                        <p class="text-xs text-indigo-900/80 leading-relaxed">
+                            Connect with fellow {{ language.name|default('Spanish') }} learners, practice speaking in chat groups, and compare weekly XP totals on the leaderboard.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- UI Scripts -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            sidebar.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

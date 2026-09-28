@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signed Out | LingoAdmin</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 font-sans text-slate-800 antialiased min-h-screen flex items-center justify-center p-4">
+
+    <!-- Logout Container -->
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-800 text-center">
+        
+        <!-- Icon & Graphic -->
+        <div class="pt-8 px-8 pb-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 text-slate-600 text-3xl mb-4 shadow-inner">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">You've Been Signed Out</h1>
+            <p class="text-sm text-slate-500 mt-2">
+                Thank you for using LingoAdmin. Your session has been safely closed.
+            </p>
+        </div>
+
+        <!-- Card Body / Action Buttons -->
+        <div class="p-8 space-y-4">
+            
+            <a href="{{ url_for('auth.login') }}" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition shadow-md shadow-indigo-600/20 flex items-center justify-center cursor-pointer">
+                <i class="fa-solid fa-right-to-bracket mr-2"></i> Sign Back In
+            </a>
+
+            <a href="{{ url_for('public.index') if 'public.index' in url_for.__self__ else '/' }}" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-lg text-sm transition flex items-center justify-center cursor-pointer">
+                <i class="fa-solid fa-house mr-2"></i> Return to Homepage
+            </a>
+
+        </div>
+
+        <!-- Card Footer with Optional Auto-Redirect -->
+        <div class="px-8 py-4 bg-slate-50 border-t border-slate-100">
+            <p class="text-xs text-slate-400">
+                Redirecting to login in <span id="countdown">5</span> seconds...
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Redirect Countdown Script -->
+    <script>
+        let seconds = 5;
+        const countdownEl = document.getElementById('countdown');
+        const loginUrl = "{{ url_for('auth.login') }}";
+
+        const interval = setInterval(() => {
+            seconds--;
+            if (countdownEl) countdownEl.textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                window.location.href = loginUrl;
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

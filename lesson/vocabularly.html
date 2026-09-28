@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Practice & Flashcards | LingoLearner</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 3D Card Flip Perspective Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased flex h-screen overflow-hidden">
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden transition-opacity"></div>
+
+    <!-- Learner Sidebar -->
+    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-300 flex flex-col justify-between transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out">
+        <div>
+            <!-- Sidebar Header / Logo -->
+            <div class="h-16 flex items-center justify-between px-6 bg-slate-950 font-bold text-xl text-indigo-400">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-graduation-cap mr-3 text-2xl"></i> LingoLearner
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <!-- Sidebar Navigation Menu -->
+            <nav class="mt-6 px-4 space-y-1">
+                <a href="{{ url_for('dashboard.index') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-house w-6"></i> Dashboard
+                </a>
+                <a href="{{ url_for('dashboard.courses') if 'dashboard.courses' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-book-open w-6"></i> My Courses
+                </a>
+                <a href="{{ url_for('language.index') if 'language.index' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-globe w-6"></i> Languages
+                </a>
+                <a href="{{ url_for('dashboard.vocab') if 'dashboard.vocab' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium shadow-sm">
+                    <i class="fa-solid fa-spell-check w-6"></i> Vocab Deck
+                </a>
+                <a href="{{ url_for('dashboard.leaderboard') if 'dashboard.leaderboard' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-trophy w-6"></i> Leaderboard
+                </a>
+                <a href="{{ url_for('dashboard.settings') if 'dashboard.settings' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-gear w-6"></i> Settings
+                </a>
+            </nav>
+        </div>
+        
+        <!-- User Profile Quick View Footer -->
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white shadow-sm">
+                    {{ current_user.username[0]|upper if current_user and current_user.username else 'L' }}
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-semibold text-white truncate">{{ current_user.username if current_user and current_user.username else 'Learner' }}</p>
+                    <p class="text-xs text-slate-400">Streak: {{ current_user.streak|default(5) }} Days 🔥</p>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" title="Sign Out" class="text-slate-400 hover:text-white transition p-1">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col overflow-y-auto w-full">
+        
+        <!-- Top Navbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-slate-900 p-1">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h1 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center">
+                    <i class="fa-solid fa-layer-group text-indigo-600 mr-2.5"></i> Vocabulary Flashcard Deck
+                </h1>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <span class="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200">
+                    <i class="fa-solid fa-brain mr-1.5 text-indigo-500"></i>
+                    <span>{{ cards_mastered|default(142) }} / {{ total_cards|default(320) }} Mastered</span>
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Vocabulary Deck Area -->
+        <main class="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto w-full flex-1 flex flex-col justify-between">
+            
+            <!-- Deck Control Filters & Counter -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex items-center space-x-2">
+                    <button onclick="setFilter('all')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">All Cards</button>
+                    <button onclick="setFilter('review')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Needs Review</button>
+                    <button onclick="setFilter('mastered')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Mastered</button>
+                </div>
+
+                <div class="text-xs font-medium text-slate-500">
+                    Card <span id="currentCardIndex">1</span> of <span id="totalCardCount">3</span>
+                </div>
+            </div>
+
+            <!-- Interactive 3D Flip Flashcard Container -->
+            <div class="perspective-1000 w-full my-auto py-4">
+                <div id="flashcard" onclick="flipCard()" class="transform-style-3d relative w-full h-80 sm:h-96 bg-white border border-slate-200 rounded-3xl shadow-lg cursor-pointer transition-transform duration-500 select-none">
+                    
+                    <!-- Card Front Side -->
+                    <div class="backface-hidden absolute inset-0 rounded-3xl p-8 flex flex-col justify-between bg-white">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                                <span id="cardCategory">Greetings</span>
+                            </span>
+                            <button onclick="event.stopPropagation(); playCurrentAudio()" class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition flex items-center justify-center">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                        </div>
+
+                        <div class="text-center space-y-2">
+                            <h2 id="cardTerm" class="text-3xl sm:text-5xl font-extrabold text-slate-800 tracking-wide">¡Buenos días!</h2>
+                            <p id="cardPhonetic" class="text-sm text-slate-400 font-mono">[bwe-nos dee-as]</p>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                                <i class="fa-solid fa-rotate mr-1"></i> Click or tap card to reveal translation
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card Back Side -->
+                    <div class="backface-hidden rotate-y-180 absolute inset-0 rounded-3xl p-8 flex flex-col justify-between bg-gradient-to-b from-indigo-900 to-slate-900 text-white">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-200 bg-indigo-800/50 px-3 py-1 rounded-full border border-indigo-700/50">
+                                Translation & Usage
+                            </span>
+                            <span id="cardPos" class="text-xs font-medium text-slate-300 italic">phrase</span>
+                        </div>
+
+                        <div class="text-center space-y-3">
+                            <h2 id="cardTranslation" class="text-3xl sm:text-4xl font-extrabold text-emerald-400">Good morning!</h2>
+                            <p id="cardExample" class="text-xs sm:text-sm text-slate-300 italic max-w-md mx-auto">
+                                "¡Buenos días! ¿Cómo amaneciste hoy?"
+                            </p>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-xs text-indigo-200/70 font-semibold uppercase tracking-wider">
+                                <i class="fa-solid fa-rotate mr-1"></i> Click or tap to flip back
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Review Feedback Actions Bar -->
+            <div class="flex items-center justify-between gap-3 max-w-lg mx-auto w-full">
+                <button onclick="previousCard()" class="px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-bold text-xs transition flex items-center shadow-sm">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Prev
+                </button>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="markCard(false)" class="px-4 sm:px-6 py-3 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 font-bold text-xs transition flex items-center shadow-sm">
+                        <i class="fa-solid fa-xmark mr-1.5 text-sm"></i> Still Learning
+                    </button>
+                    <button onclick="markCard(true)" class="px-4 sm:px-6 py-3 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs transition flex items-center shadow-sm">
+                        <i class="fa-solid fa-check mr-1.5 text-sm"></i> Mastered
+                    </button>
+                </div>
+
+                <button onclick="nextCard()" class="px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-bold text-xs transition flex items-center shadow-sm">
+                    Next <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- UI & Deck Data Logic -->
+    <script>
+        // Sample card dataset (or dynamically bound via Jinja2)
+        const vocabDeck = {{ cards_json|default([
+            {
+                "term": "¡Buenos días!",
+                "phonetic": "[bwe-nos dee-as]",
+                "translation": "Good morning!",
+                "category": "Greetings",
+                "pos": "phrase",
+                "example": "¡Buenos días! ¿Cómo amaneciste hoy?",
+                "lang_code": "es-ES"
+            },
+            {
+                "term": "Gracias",
+                "phonetic": "[gra-syas]",
+                "translation": "Thank you",
+                "category": "Polite Expressions",
+                "pos": "interjection",
+                "example": "Muchas gracias por tu ayuda.",
+                "lang_code": "es-ES"
+            },
+            {
+                "term": "El libro",
+                "phonetic": "[el lee-bro]",
+                "translation": "The book",
+                "category": "Objects",
+                "pos": "noun",
+                "example": "Estoy leyendo un libro muy interesante.",
+                "lang_code": "es-ES"
+            }
+        ])|tojson }};
+
+        let currentIndex = 0;
+        let isFlipped = false;
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            sidebar.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
+        }
+
+        function flipCard() {
+            const card = document.getElementById('flashcard');
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                card.classList.add('rotate-y-180');
+            } else {
+                card.classList.remove('rotate-y-180');
+            }
+        }
+
+        function updateCardUI() {
+            const card = document.getElementById('flashcard');
+            if (isFlipped) {
+                card.classList.remove('rotate-y-180');
+                isFlipped = false;
+                setTimeout(renderData, 200);
+            } else {
+                renderData();
+            }
+        }
+
+        function renderData() {
+            const item = vocabDeck[currentIndex];
+            document.getElementById('cardCategory').textContent = item.category || 'General';
+            document.getElementById('cardTerm').textContent = item.term;
+            document.getElementById('cardPhonetic').textContent = item.phonetic || '';
+            document.getElementById('cardTranslation').textContent = item.translation;
+            document.getElementById('cardPos').textContent = item.pos || '';
+            document.getElementById('cardExample').textContent = item.example ? `"${item.example}"` : '';
+            
+            document.getElementById('currentCardIndex').textContent = currentIndex + 1;
+            document.getElementById('totalCardCount').textContent = vocabDeck.length;
+        }
+
+        function nextCard() {
+            if (currentIndex < vocabDeck.length - 1) {
+                currentIndex++;
+                updateCardUI();
+            } else {
+                currentIndex = 0;
+                updateCardUI();
+            }
+        }
+
+        function previousCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCardUI();
+            } else {
+                currentIndex = vocabDeck.length - 1;
+                updateCardUI();
+            }
+        }
+
+        function markCard(isMastered) {
+            // Send API status update or proceed to next card
+            nextCard();
+        }
+
+        function playCurrentAudio() {
+            const item = vocabDeck[currentIndex];
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(item.term);
+                utterance.lang = item.lang_code || 'es-ES';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function setFilter(filterType) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            event.target.classList.remove('bg-slate-100', 'text-slate-600');
+            event.target.classList.add('bg-indigo-600', 'text-white');
+        }
+
+        // Initialize first card
+        document.addEventListener('DOMContentLoaded', renderData);
+    </script>
+</body>
+</html>

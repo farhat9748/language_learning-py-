@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson Management | LingoAdmin</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between hidden md:flex">
+            <div>
+                <div class="h-16 flex items-center px-6 bg-slate-950 font-bold text-xl text-indigo-400">
+                    <i class="fa-solid fa-language mr-3 text-2xl"></i> LingoAdmin
+                </div>
+                <nav class="mt-6 px-4 space-y-1">
+                    <a href="{{ url_for('admin.dashboard') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-chart-line w-6"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('admin.courses') }}" class="flex items-center px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium">
+                        <i class="fa-solid fa-book-open w-6"></i> Courses & Lessons
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-users w-6"></i> Learners
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                        <i class="fa-solid fa-spell-check w-6"></i> Vocab Banks
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white">
+                        {{ current_user.username[0]|upper if current_user and current_user.username else 'A' }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-white">{{ current_user.username if current_user and current_user.username else 'Admin' }}</p>
+                        <p class="text-xs text-slate-400">Super Admin</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Container -->
+        <div class="flex-1 flex flex-col overflow-y-auto">
+            
+            <!-- Top Navbar -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('admin.courses') }}" class="text-slate-400 hover:text-slate-600 transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-800">
+                        {% if lesson and lesson.id %}Edit Lesson: {{ lesson.title }}{% else %}Create New Lesson{% endif %}
+                    </h1>
+                </div>
+                <button type="submit" form="lessonForm" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center cursor-pointer">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> Save Lesson
+                </button>
+            </header>
+
+            <!-- Main Body Form -->
+            <main class="p-6 space-y-6 max-w-5xl mx-auto w-full">
+                
+                <form id="lessonForm" action="{{ url_for('admin.save_lesson', lesson_id=lesson.id) if lesson and lesson.id else url_for('admin.create_lesson') }}" method="POST" class="space-y-6">
+                    
+                    <!-- Basic Meta Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <h2 class="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">Lesson Information</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Parent Course</label>
+                                <select name="course_id" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                                    <option value="" disabled {% if not lesson or not lesson.course_id %}selected{% endif %}>Select Course</option>
+                                    {% if courses %}
+                                        {% for c in courses %}
+                                            <option value="{{ c.id }}" {% if lesson and lesson.course_id == c.id %}selected{% endif %}>{{ c.title }} ({{ c.language }})</option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Lesson Title</label>
+                                <input type="text" name="title" value="{{ lesson.title if lesson else '' }}" placeholder="e.g., Ordering Food at a Restaurant" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">CEFR Level</label>
+                                <select name="level" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option value="A1" {% if lesson and lesson.level == 'A1' %}selected{% endif %}>A1 - Absolute Beginner</option>
+                                    <option value="A2" {% if lesson and lesson.level == 'A2' %}selected{% endif %}>A2 - Elementary</option>
+                                    <option value="B1" {% if lesson and lesson.level == 'B1' %}selected{% endif %}>B1 - Intermediate</option>
+                                    <option value="B2" {% if lesson and lesson.level == 'B2' %}selected{% endif %}>B2 - Upper Intermediate</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Sequence Order</label>
+                                <input type="number" name="order" value="{{ lesson.order if lesson else 1 }}" min="1" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Grammar Notes & Context</label>
+                            <textarea name="grammar_notes" rows="3" placeholder="Explain the key grammar rules covered in this lesson..." class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">{{ lesson.grammar_notes if lesson else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Target Vocabulary Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-800">Vocabulary Items</h2>
+                                <p class="text-xs text-slate-500">Key words and phrases introduced in this lesson.</p>
+                            </div>
+                            <button type="button" onclick="addVocabRow()" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-md transition cursor-pointer">
+                                <i class="fa-solid fa-plus mr-1"></i> Add Phrase
+                            </button>
+                        </div>
+
+                        <div id="vocabContainer" class="space-y-3">
+                            {% if lesson and lesson.vocabulary %}
+                                {% for v in lesson.vocabulary %}
+                                <div class="flex items-center space-x-2 vocab-row">
+                                    <input type="text" name="vocab_target[]" value="{{ v.target_word }}" placeholder="Target Word" class="flex-1 rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                                    <input type="text" name="vocab_translation[]" value="{{ v.translation }}" placeholder="Translation" class="flex-1 rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                                    <input type="url" name="vocab_audio[]" value="{{ v.audio_url if v.audio_url else '' }}" placeholder="Audio URL (.mp3)" class="flex-1 rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                                    <button type="button" onclick="removeRow(this)" class="text-slate-400 hover:text-red-500 p-2 cursor-pointer">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="flex items-center space-x-2 vocab-row">
+                                    <input type="text" name="vocab_target[]" placeholder="Target Word (e.g., El lazo)" class="flex-1 rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                                    <input type="text" name="vocab_translation[]" placeholder="Translation (e.g., The loop)" class="flex-1 rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                                    <input type="url" name="vocab_audio[]" placeholder="Audio URL (.mp3)" class="flex-1 rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                                    <button type="button" onclick="removeRow(this)" class="text-slate-400 hover:text-red-500 p-2 cursor-pointer">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Exercise Builder Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-800">Interactive Quiz Questions</h2>
+                                <p class="text-xs text-slate-500">Add questions to test student comprehension at the end of the lesson.</p>
+                            </div>
+                            <button type="button" onclick="addQuestionCard()" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-md transition cursor-pointer">
+                                <i class="fa-solid fa-plus mr-1"></i> Add Question
+                            </button>
+                        </div>
+
+                        <div id="quizContainer" class="space-y-4">
+                            {% if lesson and lesson.questions %}
+                                {% for q in lesson.questions %}
+                                <div class="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-3 quiz-card">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question Item</span>
+                                        <button type="button" onclick="removeRow(this)" class="text-xs text-red-500 hover:underline cursor-pointer">Remove</button>
+                                    </div>
+                                    <input type="text" name="questions[]" value="{{ q.prompt }}" placeholder="Prompt" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white" required />
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" name="correct_answers[]" value="{{ q.correct_answer }}" placeholder="Correct Answer" class="rounded-lg border-emerald-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white" required />
+                                        <input type="text" name="wrong_answers[]" value="{{ q.distractors }}" placeholder="Distractors (comma separated)" class="rounded-lg border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white" />
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-3 quiz-card">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question Item</span>
+                                        <button type="button" onclick="removeRow(this)" class="text-xs text-red-500 hover:underline cursor-pointer">Remove</button>
+                                    </div>
+                                    <input type="text" name="questions[]" placeholder="Prompt (e.g., How do you say 'Thank you' in French?)" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white" required />
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" name="correct_answers[]" placeholder="Correct Answer" class="rounded-lg border-emerald-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white" required />
+                                        <input type="text" name="wrong_answers[]" placeholder="Distractors (comma separated)" class="rounded-lg border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white" />
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </form>
+            </main>
+        </div>
+    </div>
+
+    <!-- Dynamic Form JS -->
+    <script>
+        function addVocabRow() {
+            const container = document.getElementById('vocabContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'flex items-center space-x-2 vocab-row';
+            newRow.innerHTML = `
+                <input type="text" name="vocab_target[]" placeholder="Target Word" class="flex-1 rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                <input type="text" name="vocab_translation[]" placeholder="Translation" class="flex-1 rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
+                <input type="url" name="vocab_audio[]" placeholder="Audio URL (.mp3)" class="flex-1 rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                <button type="button" onclick="removeRow(this)" class="text-slate-400 hover:text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(newRow);
+        }
+
+        function addQuestionCard() {
+            const container = document.getElementById('quizContainer');
+            const newCard = document.createElement('div');
+            newCard.className = 'p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-3 quiz-card';
+            newCard.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question Item</span>
+                    <button type="button" onclick="removeRow(this)" class="text-xs text-red-500 hover:underline cursor-pointer">Remove</button>
+                </div>
+                <input type="text" name="questions[]" placeholder="Prompt" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white" required />
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" name="correct_answers[]" placeholder="Correct Answer" class="rounded-lg border-emerald-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white" required />
+                    <input type="text" name="wrong_answers[]" placeholder="Distractors (comma separated)" class="rounded-lg border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white" />
+                </div>
+            `;
+            container.appendChild(newCard);
+        }
+
+        function removeRow(element) {
+            const row = element.closest('.vocab-row, .quiz-card');
+            if (row) row.remove();
+        }
+    </script>
+</body>
+</html>

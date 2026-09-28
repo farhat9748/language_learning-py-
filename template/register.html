@@ -1,0 +1,549 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Register | LinguaLearn</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #eef7ff, #dff7f0);
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .navbar-brand {
+            font-size: 25px;
+            font-weight: bold;
+            color: #2563eb !important;
+        }
+
+        /* Register Section */
+        .register-section {
+            min-height: calc(100vh - 72px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 15px;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 1000px;
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Left Side */
+        .welcome-side {
+            background: linear-gradient(135deg, #2563eb, #14b8a6);
+            color: white;
+            padding: 55px 40px;
+            height: 100%;
+        }
+
+        .welcome-side h1 {
+            font-size: 38px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .welcome-side p {
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        .language-icons {
+            font-size: 45px;
+            margin-top: 35px;
+            letter-spacing: 10px;
+        }
+
+        .benefits {
+            margin-top: 35px;
+        }
+
+        .benefits p {
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        /* Form */
+        .register-form {
+            padding: 45px;
+        }
+
+        .register-form h2 {
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        .form-control,
+        .form-select {
+            height: 48px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+        }
+
+        /* Register Button */
+        .register-btn {
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .register-btn:hover {
+            background: #1d4ed8;
+        }
+
+        /* Login */
+        .login-text {
+            text-align: center;
+            margin-top: 22px;
+            color: #666;
+        }
+
+        .login-text a {
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .login-text a:hover {
+            text-decoration: underline;
+        }
+
+        .terms {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 20px;
+        }
+
+        .terms a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+
+            .welcome-side {
+                padding: 35px 25px;
+                text-align: center;
+            }
+
+            .welcome-side h1 {
+                font-size: 30px;
+            }
+
+            .register-form {
+                padding: 30px 25px;
+            }
+
+            .benefits {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+
+        <a class="navbar-brand" href="index.html">
+            🌍 LinguaLearn
+        </a>
+
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">
+    Login
+</a>
+            Login
+        </a>
+
+    </div>
+</nav>
+
+
+<!-- Register Section -->
+<section class="register-section">
+
+    <div class="register-container">
+
+        <div class="row g-0">
+
+            <!-- Welcome Side -->
+            <div class="col-md-5">
+
+                <div class="welcome-side">
+
+                    <h1>Start Your Journey 🚀</h1>
+
+                    <p>
+                        Create your free account and start learning
+                        languages from anywhere in the world.
+                    </p>
+
+                    <div class="language-icons">
+                        🌎 🗣️ 📚
+                    </div>
+
+                    <div class="benefits">
+
+                        <p>✓ Learn new languages</p>
+
+                        <p>✓ Practice vocabulary</p>
+
+                        <p>✓ Improve your speaking</p>
+
+                        <p>✓ Track your progress</p>
+
+                        <p>✓ Learn at your own pace</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Registration Form -->
+            <div class="col-md-7">
+
+                <div class="register-form">
+
+                    <h2>Create Account</h2>
+
+                    <p class="subtitle">
+                        Join LinguaLearn and start learning today
+                    </p>
+
+                    <form action="{{ url_for('auth.register') }}" method="POST">
+
+                        <!-- Full Name -->
+                        <div class="mb-3">
+
+                            <label
+                                for="name"
+                                class="form-label"
+                            >
+                                Full Name
+                            </label>
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="name"
+                                name="name"
+                                placeholder="Enter your full name"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- Email -->
+                        <div class="mb-3">
+
+                            <label
+                                for="email"
+                                class="form-label"
+                            >
+                                Email Address
+                            </label>
+
+                            <input
+                                type="email"
+                                class="form-control"
+                                id="email"
+                                name="email"
+                                placeholder="Enter your email"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- Native Language -->
+                        <div class="mb-3">
+
+                            <label
+                                for="native_language"
+                                class="form-label"
+                            >
+                                Native Language
+                            </label>
+
+                            <select
+                                class="form-select"
+                                id="native_language"
+                                name="native_language"
+                                required
+                            >
+
+                                <option value="">
+                                    Select your native language
+                                </option>
+
+                                <option value="english">
+                                    English
+                                </option>
+
+                                <option value="hindi">
+                                    Hindi
+                                </option>
+
+                                <option value="bengali">
+                                    Bengali
+                                </option>
+
+                                <option value="spanish">
+                                    Spanish
+                                </option>
+
+                                <option value="french">
+                                    French
+                                </option>
+
+                                <option value="german">
+                                    German
+                                </option>
+
+                                <option value="other">
+                                    Other
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- Learning Language -->
+                        <div class="mb-3">
+
+                            <label
+                                for="learning_language"
+                                class="form-label"
+                            >
+                                Language You Want to Learn
+                            </label>
+
+                            <select
+                                class="form-select"
+                                id="learning_language"
+                                name="learning_language"
+                                required
+                            >
+
+                                <option value="">
+                                    Select a language
+                                </option>
+
+                                <option value="english">
+                                    🇬🇧 English
+                                </option>
+
+                                <option value="spanish">
+                                    🇪🇸 Spanish
+                                </option>
+
+                                <option value="french">
+                                    🇫🇷 French
+                                </option>
+
+                                <option value="german">
+                                    🇩🇪 German
+                                </option>
+
+                                <option value="italian">
+                                    🇮🇹 Italian
+                                </option>
+
+                                <option value="japanese">
+                                    🇯🇵 Japanese
+                                </option>
+
+                                <option value="korean">
+                                    🇰🇷 Korean
+                                </option>
+
+                                <option value="chinese">
+                                    🇨🇳 Chinese
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="row">
+
+                            <!-- Password -->
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="password"
+                                    class="form-label"
+                                >
+                                    Password
+                                </label>
+
+                                <input
+                                    type="password"
+                                    class="form-control"
+                                    id="password"
+                                    name="password"
+                                    placeholder="Create password"
+                                    minlength="6"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <!-- Confirm Password -->
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="confirm_password"
+                                    class="form-label"
+                                >
+                                    Confirm Password
+                                </label>
+
+                                <input
+                                    type="password"
+                                    class="form-control"
+                                    id="confirm_password"
+                                    name="confirm_password"
+                                    placeholder="Confirm password"
+                                    minlength="6"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Terms -->
+                        <div class="terms">
+
+                            <div class="form-check">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    id="terms"
+                                    name="terms"
+                                    required
+                                >
+
+                                <label
+                                    class="form-check-label"
+                                    for="terms"
+                                >
+                                    I agree to the
+                                    <a href="#">
+                                        Terms & Conditions
+                                    </a>
+                                    and
+                                    <a href="#">
+                                        Privacy Policy
+                                    </a>
+                                </label>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Register Button -->
+                        <button
+                            type="submit"
+                            class="register-btn"
+                        >
+                            Create Account
+                        </button>
+
+                    </form>
+
+
+                    <!-- Login Link -->
+                    <div class="login-text">
+
+                        Already have an account?
+
+                        <a href="{{ url_for('auth.login') }}">
+    Login
+</a>
+                            Login
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- Bootstrap JS -->
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+</body>
+</html>
+```

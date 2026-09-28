@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ lesson.title|default('Lesson Overview') }} | LingoLearner</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased flex h-screen overflow-hidden">
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden transition-opacity"></div>
+
+    <!-- Learner Sidebar -->
+    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-300 flex flex-col justify-between transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out">
+        <div>
+            <!-- Sidebar Header / Logo -->
+            <div class="h-16 flex items-center justify-between px-6 bg-slate-950 font-bold text-xl text-indigo-400">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-graduation-cap mr-3 text-2xl"></i> LingoLearner
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <!-- Sidebar Navigation Menu -->
+            <nav class="mt-6 px-4 space-y-1">
+                <a href="{{ url_for('dashboard.index') }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-house w-6"></i> Dashboard
+                </a>
+                <a href="{{ url_for('dashboard.courses') if 'dashboard.courses' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium shadow-sm">
+                    <i class="fa-solid fa-book-open w-6"></i> My Courses
+                </a>
+                <a href="{{ url_for('language.index') if 'language.index' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-globe w-6"></i> Languages
+                </a>
+                <a href="{{ url_for('dashboard.vocab') if 'dashboard.vocab' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-spell-check w-6"></i> Vocab Deck
+                </a>
+                <a href="{{ url_for('dashboard.leaderboard') if 'dashboard.leaderboard' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-trophy w-6"></i> Leaderboard
+                </a>
+                <a href="{{ url_for('dashboard.settings') if 'dashboard.settings' in url_for.__self__ else '#' }}" class="flex items-center px-4 py-3 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition">
+                    <i class="fa-solid fa-gear w-6"></i> Settings
+                </a>
+            </nav>
+        </div>
+        
+        <!-- User Profile Quick View Footer -->
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white shadow-sm">
+                    {{ current_user.username[0]|upper if current_user and current_user.username else 'L' }}
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-semibold text-white truncate">{{ current_user.username if current_user and current_user.username else 'Learner' }}</p>
+                    <p class="text-xs text-slate-400">Streak: {{ current_user.streak|default(5) }} Days 🔥</p>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" title="Sign Out" class="text-slate-400 hover:text-white transition p-1">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col overflow-y-auto w-full">
+        
+        <!-- Top Navbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-slate-900 p-1">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <a href="{{ url_for('dashboard.courses') if 'dashboard.courses' in url_for.__self__ else '#' }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i> Back to Syllabus
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <span class="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200">
+                    {{ lesson.unit_title|default('Unit 1: Foundations') }}
+                </span>
+            </div>
+        </header>
+
+        <!-- Lesson Overview Body -->
+        <main class="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto w-full">
+
+            <!-- Hero Overview Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                            Lesson {{ lesson.order_number|default(1) }}
+                        </span>
+                        {% if lesson.is_completed %}
+                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center">
+                                <i class="fa-solid fa-circle-check mr-1.5"></i> Completed
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800">
+                        {{ lesson.title|default('Common Greetings & Introductions') }}
+                    </h1>
+
+                    <p class="text-xs sm:text-sm text-slate-500 max-w-xl leading-relaxed">
+                        {{ lesson.description|default('Learn basic daily salutations, how to introduce yourself politely, and form simple conversational questions with correct pronunciation.') }}
+                    </p>
+                </div>
+
+                <div class="w-full md:w-auto shrink-0">
+                    <a href="{{ url_for('lesson.start', lesson_id=lesson.id) if 'lesson.start' in url_for.__self__ else url_for('lesson.index') }}" 
+                       class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl text-sm transition text-center shadow-lg shadow-indigo-200 flex items-center justify-center">
+                        <i class="fa-solid fa-play mr-2 text-xs"></i> 
+                        {% if lesson.is_completed %}Practice Again{% else %}Start Lesson{% endif %}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Lesson Metadata Metrics -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 font-medium">Reward</p>
+                        <p class="text-sm font-bold text-slate-800">+{{ lesson.xp_reward|default(20) }} XP</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 font-medium">Estimated Time</p>
+                        <p class="text-sm font-bold text-slate-800">{{ lesson.estimated_minutes|default(5) }} Mins</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-circle-question"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 font-medium">Questions</p>
+                        <p class="text-sm font-bold text-slate-800">{{ lesson.question_count|default(8) }} Exercises</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 font-medium">New Vocab</p>
+                        <p class="text-sm font-bold text-slate-800">{{ lesson.vocab_count|default(5) }} Words</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target Vocabulary & Concepts Covered Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Vocab Preview Card -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+                    <h3 class="font-bold text-slate-800 text-base flex items-center border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-spell-check text-indigo-600 mr-2.5"></i> Vocabulary Preview
+                    </h3>
+
+                    <div class="divide-y divide-slate-100">
+                        {% if lesson.vocabulary %}
+                            {% for item in lesson.vocabulary %}
+                            <div class="py-2.5 flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm">{{ item.term }}</span>
+                                    <span class="text-xs text-slate-400 ml-1.5">({{ item.pos|default('noun') }})</span>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                    {{ item.translation }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Default Sample Vocabulary -->
+                            <div class="py-2.5 flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm">¡Hola!</span>
+                                    <span class="text-xs text-slate-400 ml-1.5">(phrase)</span>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">Hello!</span>
+                            </div>
+
+                            <div class="py-2.5 flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm">Buenos días</span>
+                                    <span class="text-xs text-slate-400 ml-1.5">(phrase)</span>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">Good morning</span>
+                            </div>
+
+                            <div class="py-2.5 flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm">¿Cómo estás?</span>
+                                    <span class="text-xs text-slate-400 ml-1.5">(phrase)</span>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">How are you?</span>
+                            </div>
+
+                            <div class="py-2.5 flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm">Mucho gusto</span>
+                                    <span class="text-xs text-slate-400 ml-1.5">(phrase)</span>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">Nice to meet you</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Learning Objectives -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+                    <h3 class="font-bold text-slate-800 text-base flex items-center border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-bullseye text-indigo-600 mr-2.5"></i> What You'll Learn
+                    </h3>
+
+                    <ul class="space-y-3.5 text-xs text-slate-600">
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-circle-check text-emerald-500 text-sm mr-2.5 mt-0.5"></i>
+                            <span>Greet someone based on the time of day with appropriate formality.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-circle-check text-emerald-500 text-sm mr-2.5 mt-0.5"></i>
+                            <span>Ask and answer basic personal introduction questions.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-circle-check text-emerald-500 text-sm mr-2.5 mt-0.5"></i>
+                            <span>Recognize accurate audio accents for basic conversational greetings.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-circle-check text-emerald-500 text-sm mr-2.5 mt-0.5"></i>
+                            <span>Understand subject-verb agreement for essential introductory verbs.</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- UI Scripts -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            sidebar.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
